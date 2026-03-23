@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宿舍管理系統 | Dormitory Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="dashboard-header">
+            <div class="header-title" style="text-align: center; margin-bottom: 2rem;">
+                <h1><i class="fa-solid fa-building-user text-primary"></i> 宿舍管理系統總覽</h1>
+                <p class="text-muted">即時掌握各宿舍容納狀態與收費情形</p>
+            </div>
+            
+            <!-- Search Bar -->
+            <div style="display: flex; justify-content: center;">
+                <div class="search-bar" style="margin: 0 0 2.5rem 0; display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem; max-width: 600px; width: 100%; border: 2px solid var(--primary); background: #ffffff; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2); border-radius: 50px;">
+                    <div style="background: #EEF2FF; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); margin-left: 0.25rem;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="student-search-input" class="form-control" style="flex: 1; border: none; background: transparent; box-shadow: none; font-size: 1.05rem; padding: 0.5rem;" placeholder="請輸入學號 (快速查詢學生住宿資料)">
+                    <button class="btn btn-primary" style="border-radius: 50px; padding: 0.6rem 1.5rem; font-size: 1rem;" onclick="searchStudent()">查詢</button>
+                </div>
+            </div>
+
+            <!-- Stats overview cards -->
+            <div class="stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.25rem; width: 100%; max-width: 1200px; margin: 0 auto;">
+                <div class="stat-card box-glass" style="padding: 1rem;">
+                    <span class="stat-icon"><i class="fa-solid fa-users"></i></span>
+                    <div class="stat-info">
+                        <span class="stat-label">總共容納人數</span>
+                        <span class="stat-value" id="total-capacity">0</span>
+                    </div>
+                </div>
+                <div class="stat-card box-glass" style="padding: 1rem;">
+                    <span class="stat-icon" style="background:#DBEAFE; color:#2563EB;"><i class="fa-solid fa-user-check"></i></span>
+                    <div class="stat-info">
+                        <span class="stat-label">總住宿人數</span>
+                        <span class="stat-value" id="total-occupants">0</span>
+                    </div>
+                </div>
+                <div class="stat-card box-glass" style="padding: 1rem;">
+                    <span class="stat-icon" style="background:#FEE2E2; color:#DC2626;"><i class="fa-solid fa-bed"></i></span>
+                    <div class="stat-info">
+                        <span class="stat-label">空床位數</span>
+                        <span class="stat-value" id="total-empty">0</span>
+                    </div>
+                </div>
+                <div class="stat-card box-glass" style="padding: 1rem;">
+                    <span class="stat-icon" style="background:#F3E8FF; color:#9333EA;"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                    <div class="stat-info">
+                        <span class="stat-label">已繳費人數</span>
+                        <span class="stat-value" id="total-paid">0</span>
+                    </div>
+                </div>
+
+                <div class="stat-card box-glass" style="padding: 1rem;">
+                    <span class="stat-icon" style="background:#DCFCE7; color:#059669;"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <div class="stat-info">
+                        <span class="stat-label">實際收益</span>
+                        <span class="stat-value" id="total-actual-revenue">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Table -->
+            <div class="stats-table-wrapper box-glass" style="margin: 2rem 0; padding: 1.5rem;">
+                <div style="font-size:1.1rem; font-weight:600; margin-bottom: 1rem; color:var(--text-main); display:flex; align-items:center; gap:0.5rem;">
+                    <i class="fa-solid fa-chart-column"></i>各宿舍資料統計表
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size:0.95rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); color:var(--text-muted);">
+                                <th style="padding: 0.75rem;">宿舍名稱</th>
+                                <th style="padding: 0.75rem;">可容納人數</th>
+                                <th style="padding: 0.75rem;">當前入住</th>
+                                <th style="padding: 0.75rem;">當前空床</th>
+                                <th style="padding: 0.75rem;">已繳費人數</th>
+                                <th style="padding: 0.75rem;">實際收益</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-table-body">
+                            <!-- JS will populate rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <div class="section-header">
+                <h2>宿舍列表 (共 5 棟)</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="exportAllDormsToExcel()" style="background-color: #107c41; color: white; border-color: #107c41;">
+                        <i class="fa-solid fa-file-excel"></i> 匯出全部名單
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadImportTemplate()" style="color: #107c41; border-color: #107c41; background: transparent;">
+                        <i class="fa-solid fa-file-arrow-down"></i> 範例格式下載
+                    </button>
+                    <label for="import-excel-file" class="btn btn-secondary" style="background-color: var(--primary); color: white; border-color: var(--primary); cursor: pointer; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-file-import"></i> 整批匯入資料
+                    </label>
+                    <input type="file" id="import-excel-file" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelImport(event)">
+                    <button class="btn btn-secondary" onclick="showEmptyBeds()">
+                        <i class="fa-solid fa-bed"></i> 顯示所有空床位
+                    </button>
+                </div>
+            </div>
+            <div class="dorm-grid" id="dorm-grid">
+                <!-- Dorm cards will be injected here by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Resident Management Modal -->
+    <div id="resident-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-dorm-name">宿舍名稱 - 住宿生管理</h2>
+                <button class="btn-icon" onclick="closeResidentModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="beds-sidebar" id="beds-list">
+                    <!-- Bed items will be injected here -->
+                </div>
+                <div class="bed-detail" id="bed-detail-panel">
+                    <div class="empty-state">請選擇左側床位以檢視或新增住宿生資料。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Modal -->
+    <div id="info-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 id="info-modal-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-circle-info text-primary"></i> 查詢結果</h3>
+                <button class="btn-icon" onclick="document.getElementById('info-modal').classList.add('hidden')">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div id="info-modal-body" style="font-size: 0.95rem; line-height: 1.6; max-height: 60vh; overflow-y: auto;">
+            </div>
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <button class="btn btn-secondary" onclick="document.getElementById('info-modal').classList.add('hidden')">關閉視窗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Screen List Modal -->
+    <div id="list-modal" class="modal hidden">
+        <div class="modal-content" style="width: 95vw; height: 90vh; max-width: 1400px; padding: 2rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-shrink: 0;">
+                <h3 id="list-modal-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem;"></h3>
+                <button class="btn-icon" onclick="document.getElementById('list-modal').classList.add('hidden')" style="font-size: 1.5rem;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div id="list-modal-body" style="font-size: 1.1rem; flex: 1; overflow-y: auto; padding-right: 0.5rem;">
+            </div>
+            <div style="margin-top: 1.5rem; text-align: right; flex-shrink: 0;">
+                <button class="btn btn-secondary" onclick="document.getElementById('list-modal').classList.add('hidden')" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">關閉視窗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="data.js"></script>
+    <script src="imported_residents.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
